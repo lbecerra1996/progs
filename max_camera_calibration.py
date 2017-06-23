@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import glob
+import yaml
 
 criteria= (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
 
@@ -10,7 +11,7 @@ objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 objpoints=[] #3d points in real worls space
 imgpoints=[] #2d points in image plane
 
-images='/home/max/cb.jpg'
+images='/home/juangelo/Downloads/cb.jpg'
 
 img= cv2.imread(images)
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -42,7 +43,7 @@ print(imgpoints.__len__())
 
 #camera matrices
 ret,mtx,dist,rvecs,tvecs = cv2.calibrateCamera(objpoints,imgpoints,gray.shape[::-1],None,None)
-img=cv2.imread('/home/max/cb.jpg')
+img=cv2.imread(images)
 h, w = img.shape[:2]
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
@@ -71,7 +72,7 @@ print(ret)
 if ret == True:
 	cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
 	print(corners)
-	rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners, mtx, dist)
+	rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners, mtx, dist)[1:]
 
 	imgpoints, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
 	
@@ -79,5 +80,11 @@ if ret == True:
 	img = draw(img,corners,imgpoints)
 	cv2.imshow('img',img)
 	cv2.waitKey(0)
+
+	# saving results to a YAML file
+	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist()}
+	with open("calibration.yaml", "w") as f:
+		yaml.dump(data, f)
+
 
 cv2.destroyAllWindows()
