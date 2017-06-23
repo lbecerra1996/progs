@@ -4,10 +4,11 @@ import cv2
 import glob
 import yaml
 
-criteria= (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
+# not sure where this is coming from
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
 
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+objp = np.zeros((6*9,3), np.float32)
+objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
 
 objpoints = [] # 3D points in real world space
 imgpoints = [] # 2D points in image plane
@@ -27,7 +28,76 @@ while cap.isOpened():
 cap.release()
 
 # convert image to grayscale
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+print gray.shape
+
+i = 1
+while i > 0:
+	if i == 1:
+		cv2.imshow("Gray image", gray)
+	i += 1
+	if (cv2.waitKey(1) & 0xFF) == ord('r'):
+		i = 0
 
 # find chessboard corners. note: watch out for board row/col dimensions!
-ret, corners = cv2.findChessboardCorners(gray,(10,7),None)
+ret, corners = cv2.findChessboardCorners(gray, (9,6), None)
+print "Ret after findChessboardCorners"
+print ret
+
+if ret == True:
+	objpoints.append(objp)
+
+	# not sure where (11,11) comes from
+	cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+	imgpoints.append(corners)
+	
+	#draw corners
+	cv2.drawChessboardCorners(image, (10,7), corners, ret)
+
+#UNDISTORTION + CAMERA MATRICES
+
+print(objpoints.__len__())
+print(imgpoints.__len__())
+
+#camera matrices
+print(gray.shape[::-1])
+a = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+ret, mtx, dist, rvecs, tvecs = a
+h, w = image.shape[:2]
+newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+
+# undistorted version of webcam image we used for calibration
+dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
+
+# Save calibrated image
+cv2.imwrite('calibration.png', dst)
+
+# Function that mutates image by drawing lines to show calibration effect
+# NOTE: mutates img
+def draw(img, corners, imgpoints):
+	corner = tuple(corners[0].ravel())
+	img = cv2.line(img, corner, tuple(imgpoints[0].ravel()), (255,0,0),5)
+	img = cv2.line(img, corner, tuple(imgpoints[1].ravel()), (0,255,0),5)
+	img = cv2.line(img, corner, tuple(imgpoints[2].ravel()), (0,0,255),5)
+	return img
+
+axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
+
+if ret == True:
+	cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+	rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners, mtx, dist)[1:]
+
+	imgpoints, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
+	
+	#draw corners
+	image = draw(image, corners, imgpoints)
+	cv2.imshow('image',image)
+	cv2.waitKey(0)
+
+	# saving results to a YAML file
+	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist()}
+	with open("calibration.yaml", "w") as f:
+		yaml.dump(data,f)
+
+
+cv2.destroyAllWindows()
