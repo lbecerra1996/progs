@@ -4,6 +4,10 @@ import cv2
 import glob
 import yaml
 
+# directory in which yaml file will be saved
+path = "\\home\\python scripts\\auxiliary"
+
+# default values to avoid certain blocks of code with invalid data
 retCorners, retCalibrate = False, False
 
 # not sure where this is coming from
@@ -103,7 +107,7 @@ if retCalibrate > 0:
 	# saving results to a YAML file
 	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist(), \
 			'rvecs': np.asarray(rvecs).tolist(), 'tvecs': np.asarray(tvecs).tolist()}
-	with open("calibration.yaml", "w") as f:
+	with open(path + "calibration.yaml", "w") as f:
 		yaml.dump(data,f)
 
 else:
