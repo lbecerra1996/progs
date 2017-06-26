@@ -27,7 +27,7 @@ while cap.isOpened():
 	image = cap.read()[1]
 	cv2.imshow("Webcam Image", image)
 	if (cv2.waitKey(1) & 0xFF) == ord('q'):		# if user presses 'q'
-		cv2.imwrite("webcamim.png", image)		# save image for debugging/documentation
+		cv2.imwrite(path + "webcamim.png", image)		# save image for debugging/documentation
 		break
 
 # stop using webcam once we obtain picture for calibration
@@ -75,7 +75,7 @@ if retCorners == True:
 	dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
 
 	# Save calibrated image
-	cv2.imwrite('calibration.png', dst)
+	cv2.imwrite(path + 'calibration.png', dst)
 
 else:
 	print "Error, could not identify checkerboard corners. \n \
