@@ -4,6 +4,8 @@ import cv2
 import glob
 import yaml
 
+retCorners, retCalibrate = False, False
+
 # not sure where this is coming from
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, .001)
 
@@ -54,22 +56,26 @@ if retCorners == True:
 	#draw corners
 	cv2.drawChessboardCorners(image, (10,7), corners, True)
 
-#UNDISTORTION + CAMERA MATRICES
+	#UNDISTORTION + CAMERA MATRICES
 
-# print(objpoints.__len__())
-# print(imgpoints.__len__())
+	# print(objpoints.__len__())
+	# print(imgpoints.__len__())
 
-#camera matrices
-# Note: retCalibrate is (at least sometimes) a double and not a boolean (what we expected)
-retCalibrate, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-h, w = image.shape[:2]
-newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+	#camera matrices
+	# Note: retCalibrate is (at least sometimes) a double and not a boolean (what we expected)
+	retCalibrate, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+	h, w = image.shape[:2]
+	newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
 
-# undistorted version of webcam image we used for calibration
-dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
+	# undistorted version of webcam image we used for calibration
+	dst = cv2.undistort(image, mtx, dist, None, newcameramtx)
 
-# Save calibrated image
-cv2.imwrite('calibration.png', dst)
+	# Save calibrated image
+	cv2.imwrite('calibration.png', dst)
+
+else:
+	print "Error, could not identify checkerboard corners. \n \
+	Please try again and make sure checkerboard is within camera frame."
 
 # Function that mutates image by drawing lines to show calibration effect
 # NOTE: mutates img
@@ -98,6 +104,9 @@ if retCalibrate > 0:
 	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist()}
 	with open("calibration.yaml", "w") as f:
 		yaml.dump(data,f)
+
+else:
+	print "Error, calibration failed. Please try again."
 
 
 cv2.destroyAllWindows()
