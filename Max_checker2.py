@@ -11,6 +11,10 @@ objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 objpoints=[] #3d points in real worls space
 imgpoints=[] #2d points in image plane
 
+cap = cv2.VideoCapture(1)
+while cap.isOpened():
+	ret, img = cap.read()
+	cv2.imshow("Webcam Image", image)
 images='cb.jpg'
 
 img= cv2.imread(images)
@@ -67,7 +71,7 @@ def draw(img, corners, imgpoints):
 
 axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
 
-print('cool')
+print('cool'
 print(ret)
 
 if ret == True:

@@ -3,6 +3,7 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 
+yaml_data = numpy.asarray(cv2.cv.Load("calibration.yaml"))
 #lengths in cm
 square_length = 6.35
 markerLength = 5.08
@@ -33,15 +34,15 @@ for i in range(300):
             allCorners.append(res2[1])
             allIds.append(res2[2])
 
-        #cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
-
+        cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
+        cv2.aruco.drawAzis(gray, )
     cv2.imshow('frame',gray)
     cv2.imwrite("cal.jpg", gray)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     decimator += 1
 
-#imsize = gray.shape
+#deimsize = gray.shape
 
 print(allIds)
 
