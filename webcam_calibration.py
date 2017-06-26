@@ -101,7 +101,8 @@ if retCalibrate > 0:
 	cv2.waitKey(0)
 
 	# saving results to a YAML file
-	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist()}
+	data = {'camera_matrix': np.asarray(mtx).tolist(), 'dist_coeff': np.asarray(dist).tolist(), \
+			'rvecs': np.asarray(rvecs).tolist(), 'tvecs': np.asarray(tvecs).tolist()}
 	with open("calibration.yaml", "w") as f:
 		yaml.dump(data,f)
 
