@@ -54,6 +54,14 @@ def ids_avg(IDsList):
 
     return avgSamples
 
+# given two tag corners, return 0 if the first tag has the highest y value, else 1
+# NOTE: careful not to confuse "highest y value" with "physically at the top" (double-check coordinate system)
+# NOTE: assumes y coordinate is the second value in a 2d-coordinate pair
+def id_above(corners):
+    ymin0 = min(corners[0][0][i][1] for i in range(4))
+    ymin1 = min(corners[1][0][i][1] for i in range(4))
+
+    return 0 if ymin0 > ymin1 else 1
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -121,6 +129,14 @@ print(avgIDs)
 numIds = len(avgIDs)    # should be equal to numTags
 print (numIds)
 
+id_above, id_below = avgIDs[0][0], avgIDs[1][0] if id_above(avgCorners) == 0 else avgIDs[1][0], avgIDs[0][0]
+
+print(id_above)
+print(id_below)
+
+cap.release()
+cv2.destroyAllWindows()
+
 # #compare y values of 2 tags to determine which is higher tag and lower tag
 # if (corners[0][0][0][1]+corners[0][0][2][1]) > corners[1][0][0][1]+corners[1][0][2][1]:
 #     lowerId = ids[0]
@@ -151,5 +167,3 @@ print (numIds)
 # for i in range(numIds):
 #     print'markerId'+str(ids[i])+'='+str(corners[i])
 
-cap.release()
-cv2.destroyAllWindows()
