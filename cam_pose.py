@@ -54,7 +54,7 @@ with open("calibration.yaml") as f:
 # extract relevant information from calibration data
 # convert to numpy arrays for usage in OpenCV/ARUCO functions
 camera_matrix = np.asarray(calibration_data['camera_matrix'])
-dist_coeff = np.asarray(calibraiton_data['dist_coeff'])
+dist_coeff = np.asarray(calibration_data['dist_coeff'])
 
 square_length = 6.35    # cm
 markerLength = 5.08     # cm
@@ -80,7 +80,7 @@ for i in range(100):
     tagCorners, tagIDs = res[0], res[1]
 
     # check that all IDs and corners were detected
-    if tagCorners is not None and tagIDs is not None and len(IDs) == numTags:
+    if tagCorners is not None and tagIDs is not None and len(tagIDs) == numTags:
         # For each corner (set of 4 points), sort its points in counterclockwise order, starting with top-left point
         # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
         sortedCorners = [order_points(tagCorners[i][0]) for i in range(numTags)]
