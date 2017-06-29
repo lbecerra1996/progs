@@ -46,6 +46,14 @@ def corners_avg(cornersList):
 
     return sumSamples/numSamples
 
+def ids_avg(IDsList):
+    numSamples = len(IDsList)
+    numIDs = len(IDsList[0])
+
+    avgSamples = [sum(IDsList[i][j][0] for i in range(numSamples))/numSamples for j in range(numIDs)]
+
+    return avgSamples
+
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -108,40 +116,40 @@ while True:
 # take average of all detected corners and IDs
 avgCorners = corners_avg(allCorners)
 print(avgCorners)
-avgIDs = corners_avg(allIDs).tolist()
+avgIDs = ids_avg(allIDs)
 print(avgIDs)
 numIds = len(avgIDs)    # should be equal to numTags
 print (numIds)
 
-#compare y values of 2 tags to determine which is higher tag and lower tag
-if (corners[0][0][0][1]+corners[0][0][2][1]) > corners[1][0][0][1]+corners[1][0][2][1]:
-    lowerId = ids[0]
-    higherId = ids[1]
-    #find top corner y value of lower marker
-    y_val_low = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
-    y_low = min(y_val_low) #use min because horizontal axis is flipped
-    #find bottom corner y value of top marker
-    y_val_high = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
-    y_high = max(y_val_high)
-else:
-    lowerId = ids[1]
-    higherId = ids[0]
-    #find top corner y value of lower marker
-    y_val_low = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
-    y_low = min(y_val_low)
-    #find bottom corner y value of top marker
-    y_val_high = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
-    y_high = max(y_val_high)
+# #compare y values of 2 tags to determine which is higher tag and lower tag
+# if (corners[0][0][0][1]+corners[0][0][2][1]) > corners[1][0][0][1]+corners[1][0][2][1]:
+#     lowerId = ids[0]
+#     higherId = ids[1]
+#     #find top corner y value of lower marker
+#     y_val_low = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
+#     y_low = min(y_val_low) #use min because horizontal axis is flipped
+#     #find bottom corner y value of top marker
+#     y_val_high = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
+#     y_high = max(y_val_high)
+# else:
+#     lowerId = ids[1]
+#     higherId = ids[0]
+#     #find top corner y value of lower marker
+#     y_val_low = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
+#     y_low = min(y_val_low)
+#     #find bottom corner y value of top marker
+#     y_val_high = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
+#     y_high = max(y_val_high)
 
-print 'lowerId:',lowerId
-print 'higherId:',higherId
-print 'bottom marker y value:', y_low
-print 'top marker y value:', y_high
-distance = y_low - y_high
-print distance
+# print 'lowerId:',lowerId
+# print 'higherId:',higherId
+# print 'bottom marker y value:', y_low
+# print 'top marker y value:', y_high
+# distance = y_low - y_high
+# print distance
 
-for i in range(numIds):
-    print'markerId'+str(ids[i])+'='+str(corners[i])
+# for i in range(numIds):
+#     print'markerId'+str(ids[i])+'='+str(corners[i])
 
 cap.release()
 cv2.destroyAllWindows()
