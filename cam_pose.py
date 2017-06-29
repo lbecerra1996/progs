@@ -129,7 +129,7 @@ print(avgIDs)
 numIds = len(avgIDs)    # should be equal to numTags
 print (numIds)
 
-id_above, id_below = avgIDs[0][0], avgIDs[1][0] if id_above(avgCorners) == 0 else avgIDs[1][0], avgIDs[0][0]
+id_above, id_below = (avgIDs[0][0], avgIDs[1][0]) if id_above(avgCorners) == 0 else (avgIDs[1][0], avgIDs[0][0])
 
 print(id_above)
 print(id_below)
