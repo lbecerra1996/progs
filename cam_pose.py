@@ -126,7 +126,7 @@ for i in range(100):
     res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
     # unclear: does res contain the same ordering for IDs and matching corners?
     tagCorners, tagIDs = res[0], res[1]
-    numTags = len(tagIDs)
+    numTags = len(tagIDs) if tagIDs is not None else 0
 
     numDetected.append(numTags)
 
