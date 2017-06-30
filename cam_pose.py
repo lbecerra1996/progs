@@ -64,7 +64,7 @@ def id_above(corners):
 
     return 0 if ymin0 < ymin1 else 1
 
-# given a set of tag corners, determine highest y value
+# given a list of tags' corners, determine highest y value
 # NOTE: assumes higher y value = lower physical location
 # NOTE: assumes y coordinate is the second value in a 2d-coordinate pair
 def highest_y_val(cornersList):
@@ -75,6 +75,19 @@ def highest_y_val(cornersList):
             if y > maxY:
                 maxY = y
     return maxY
+
+# given a list of tags' corners, a y value, and an error margin, return number of tags with at least one 
+# y coordinate above y_val - error_margin (physically: is less than error_margin above y_val)
+def num_bottom_tags(cornersList, y_val, error_margin):
+    numBottom = 0
+    for corner in cornersList:
+        for point in corners:
+            y = point[1]
+            if y > y_val - error_margin:
+                numBottom += 1
+                break
+    return numBottom
+
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -89,6 +102,8 @@ square_length = 6.35    # cm
 markerLength = 5.08     # cm
 # number of AR tags we're using
 numTagsThreshold = 2
+# error margin for determining if a tag counts as a bottom tag
+errorMargin = 5
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -123,8 +138,7 @@ for i in range(100):
 
         highestYval = highest_y_val(sortedCorners)
 
-        # TODO
-        numBottomTags = 0
+        numBottomTags = num_bottom_tags(sortedCorners, highestYval, errorMargin)
 
         numBottom.append(numBottom)
 
@@ -149,8 +163,10 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+print("number of tags identified in each frame:\n" + str(numDetected))
 # take average of all detected corners and IDs
-print("Number of valid samples: " + str(len(allCorners)))
+print("Number of valid frames: " + str(len(allCorners)))
+print("Number of bottom tags in each valid frame:\n" + str(numBottom))
 avgCorners = corners_avg(allCorners)
 print(avgCorners)
 avgIDs = ids_avg(allIDs)
@@ -165,34 +181,4 @@ print("id_below: " + str(id_below))
 
 cap.release()
 cv2.destroyAllWindows()
-
-# #compare y values of 2 tags to determine which is higher tag and lower tag
-# if (corners[0][0][0][1]+corners[0][0][2][1]) > corners[1][0][0][1]+corners[1][0][2][1]:
-#     lowerId = ids[0]
-#     higherId = ids[1]
-#     #find top corner y value of lower marker
-#     y_val_low = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
-#     y_low = min(y_val_low) #use min because horizontal axis is flipped
-#     #find bottom corner y value of top marker
-#     y_val_high = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
-#     y_high = max(y_val_high)
-# else:
-#     lowerId = ids[1]
-#     higherId = ids[0]
-#     #find top corner y value of lower marker
-#     y_val_low = [corners[1][0][0][1], corners[1][0][1][1], corners[1][0][2][1], corners[1][0][3][1]]
-#     y_low = min(y_val_low)
-#     #find bottom corner y value of top marker
-#     y_val_high = [corners[0][0][0][1], corners[0][0][1][1], corners[0][0][2][1], corners[0][0][3][1]]
-#     y_high = max(y_val_high)
-
-# print 'lowerId:',lowerId
-# print 'higherId:',higherId
-# print 'bottom marker y value:', y_low
-# print 'top marker y value:', y_high
-# distance = y_low - y_high
-# print distance
-
-# for i in range(numIds):
-#     print'markerId'+str(ids[i])+'='+str(corners[i])
 
