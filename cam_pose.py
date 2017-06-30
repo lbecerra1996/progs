@@ -89,7 +89,7 @@ def edge_tags(cornersList, x_val, error_margin, isLeft):
         for point in corners:
             x = point[0]
             left = (x < x_val + error_margin)
-            right = (x > x_val - error margin)
+            right = (x > x_val - error_margin)
             if (isLeft and left) or (not isLeft and right):
                 edgeTags.append(corners)
                 break
@@ -212,8 +212,8 @@ for i in range(100):
         # edit: not sure if this is relevant/ important
 
         # store corners and IDs (not sure if necessary)
-        # allCorners.append(sortedCorners)
-        # allIDs.append(tagIDs)
+        allCorners.append(sortedCorners)
+        allIDs.append(tagIDs)
 
         # rvec, tvec = aruco.estimatePoseSingleMarkers(np.asarray(tagCorners), markerLength, camera_matrix, dist_coeff)
 
