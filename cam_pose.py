@@ -80,7 +80,7 @@ def highest_y_val(cornersList):
 # y coordinate above y_val - error_margin (physically: is less than error_margin above y_val)
 def num_bottom_tags(cornersList, y_val, error_margin):
     numBottom = 0
-    for corner in cornersList:
+    for corners in cornersList:
         for point in corners:
             y = point[1]
             if y > y_val - error_margin:
@@ -140,7 +140,7 @@ for i in range(100):
 
         numBottomTags = num_bottom_tags(sortedCorners, highestYval, errorMargin)
 
-        numBottom.append(numBottom)
+        numBottom.append(numBottomTags)
 
         # TO DO: make sure order of IDs matches order of corners
         # edit: not sure if this is relevant/ important
@@ -167,17 +167,17 @@ print("number of tags identified in each frame:\n" + str(numDetected))
 # take average of all detected corners and IDs
 print("Number of valid frames: " + str(len(allCorners)))
 print("Number of bottom tags in each valid frame:\n" + str(numBottom))
-avgCorners = corners_avg(allCorners)
-print(avgCorners)
-avgIDs = ids_avg(allIDs)
-print(avgIDs)
-numIds = len(avgIDs)    # should be equal to numTags
-print (numIds)
+# avgCorners = corners_avg(allCorners)
+# print(avgCorners)
+# avgIDs = ids_avg(allIDs)
+# print(avgIDs)
+# numIds = len(avgIDs)    # should be equal to numTags
+# print (numIds)
 
-id_above, id_below = (avgIDs[0], avgIDs[1]) if id_above(avgCorners) == 0 else (avgIDs[1], avgIDs[0])
+# id_above, id_below = (avgIDs[0], avgIDs[1]) if id_above(avgCorners) == 0 else (avgIDs[1], avgIDs[0])
 
-print("id_above: " + str(id_above))
-print("id_below: " + str(id_below))
+# print("id_above: " + str(id_above))
+# print("id_below: " + str(id_below))
 
 cap.release()
 cv2.destroyAllWindows()
