@@ -7,6 +7,7 @@ import yaml
 import os
 
 # given a list of four points, returns a numpy array of them in counterclockwise order, starting with top-left
+# NOTE: assumes pts has 4 elements
 def order_points(pts):
     # sort the points based on their x-coordinates
     xSorted = pts[np.argsort(pts[:, 0]), :]
@@ -63,6 +64,18 @@ def id_above(corners):
 
     return 0 if ymin0 < ymin1 else 1
 
+# given a set of tag corners, determine highest y value
+# NOTE: assumes higher y value = lower physical location
+# NOTE: assumes y coordinate is the second value in a 2d-coordinate pair
+def highest_y_val(cornersList):
+    maxY = 0
+    for corners in cornersList:
+        for point in corners:
+            y = point[1]
+            if y > maxY:
+                maxY = y
+    return maxY
+
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
     calibration_data = yaml.load(f)
@@ -75,7 +88,7 @@ dist_coeff = np.asarray(calibration_data['dist_coeff'])
 square_length = 6.35    # cm
 markerLength = 5.08     # cm
 # number of AR tags we're using
-numTags = 2
+numTagsThreshold = 2
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -84,6 +97,10 @@ arucoParams = aruco.DetectorParameters_create()
 # initialize lists to store all detected corners and IDs
 allCorners = []
 allIDs = []
+# keeps track of number of detected tags in each video frame/sample
+numDetected = []
+# keeps track of number of bottom tags detected in each valid video frame / sample
+numBottom = []
 
 # initialize video stream capture
 cap = cv2.VideoCapture(0)       # 0 for default camera, 1 for external connection
@@ -94,14 +111,25 @@ for i in range(100):
     res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
     # unclear: does res contain the same ordering for IDs and matching corners?
     tagCorners, tagIDs = res[0], res[1]
+    numTags = len(tagIDs)
+
+    numDetected.append(numTags)
 
     # check that all IDs and corners were detected
-    if tagCorners is not None and tagIDs is not None and len(tagIDs) == numTags:
+    if tagCorners is not None and tagIDs is not None and numTags >= numTagsThreshold:
         # For each corner (set of 4 points), sort its points in counterclockwise order, starting with top-left point
         # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
         sortedCorners = [order_points(tagCorners[i][0]) for i in range(numTags)]
 
+        highestYval = highest_y_val(sortedCorners)
+
+        # TODO
+        numBottomTags = 0
+
+        numBottom.append(numBottom)
+
         # TO DO: make sure order of IDs matches order of corners
+        # edit: not sure if this is relevant/ important
 
         # store corners and IDs
         allCorners.append(sortedCorners)
