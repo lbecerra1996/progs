@@ -64,6 +64,39 @@ def id_above(corners):
 
     return 0 if ymin0 < ymin1 else 1
 
+
+def lowest_x_val(cornersList):
+    minX = 10000
+    for corners in cornersList:
+        for point in corners:
+            x = point[0]
+            if x < minX:
+                minX = x
+    return minX
+
+def highest_x_val(cornersList):
+    maxX = 0
+    for corners in cornersList:
+        for point in corners:
+            x = point[0]
+            if x > maxX:
+                maxX = x
+    return maxX
+
+def edge_tags(cornersList, x_val, error_margin, isLeft):
+    edgeTags = []
+    for corners in cornersList:
+        for point in corners:
+            x = point[0]
+            left = (x < x_val + error_margin)
+            right = (x > x_val - error_margin)
+            if (isLeft and left) or (not isLeft and right):
+                edgeTags.append(corners)
+                break
+    return edgeTags
+
+
+
 # given a list of tags' corners, determine highest y value
 # NOTE: assumes higher y value = lower physical location
 # NOTE: assumes y coordinate is the second value in a 2d-coordinate pair
@@ -87,7 +120,16 @@ def num_bottom_tags(cornersList, y_val, error_margin):
                 numBottom += 1
                 break
     return numBottom
+ 
+# given a list of the corners of three (leftmost or rightmost) tags, return y value difference between middle and bottom tags
+# TO DO: incorporate constants to account for distances from AR tags to borders
+def measure_height(threeCorners, bot_to_top_distance):
+    topCorners, midCorners, botCorners = sorted(threeCorners, key=lambda corners: corners[0][1])
 
+    bot_to_top = botCorners[0][1] - topCorners[3][1]
+    bot_to_mid = botCorners[0][1] - midCorners[3][1]
+
+    return (bot_to_top_distance) * (bot_to_mid/bot_to_top)
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -104,6 +146,8 @@ markerLength = 5.08     # cm
 numTagsThreshold = 2
 # error margin for determining if a tag counts as a bottom tag
 errorMargin = 5
+# distance between top left corner of bottom AR tag and bottom left corner of top AR tag
+botToTopDistance = 100
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -116,6 +160,14 @@ allIDs = []
 numDetected = []
 # keeps track of number of bottom tags detected in each valid video frame / sample
 numBottom = []
+
+numLeft = []
+numRight = []
+
+# keep track of height measurements
+# list of tuples of the form (i, height)
+heightsLeft = []
+heightsRight = []
 
 # initialize video stream capture
 cap = cv2.VideoCapture(0)       # 0 for default camera, 1 for external connection
@@ -137,22 +189,36 @@ for i in range(100):
         sortedCorners = [order_points(tagCorners[i][0]) for i in range(numTags)]
 
         highestYval = highest_y_val(sortedCorners)
-
         numBottomTags = num_bottom_tags(sortedCorners, highestYval, errorMargin)
-
         numBottom.append(numBottomTags)
+
+        lowestXval =  lowest_x_val(sortedCorners)
+        leftTags = edge_tags(sortedCorners, lowestXval, errorMargin, isLeft=True)
+        numLeftTags = len(leftTags)
+        numLeft.append(numLeftTags)
+        if numLeftTags == 3:
+            heightLeft = measure_height(leftTags, botToTopDistance)
+            heightsLeft.append((i, heightLeft))
+
+        highestXval =  highest_x_val(sortedCorners)
+        rightTags = edge_tags(sortedCorners, highestXval, errorMargin, isLeft=False)
+        numRightTags = len(rightTags)
+        numRight.append(numRightTags)
+        if numRightTags == 3:
+            heightRight = measure_height(rightTags, botToTopDistance)
+            heightsRight.append((i, heightRight))
 
         # TO DO: make sure order of IDs matches order of corners
         # edit: not sure if this is relevant/ important
 
-        # store corners and IDs
+        # store corners and IDs (not sure if necessary)
         allCorners.append(sortedCorners)
         allIDs.append(tagIDs)
 
-        rvec, tvec = aruco.estimatePoseSingleMarkers(np.asarray(tagCorners), markerLength, camera_matrix, dist_coeff)
+        # rvec, tvec = aruco.estimatePoseSingleMarkers(np.asarray(tagCorners), markerLength, camera_matrix, dist_coeff)
 
-        # for visual debugging
-        cv2.aruco.drawDetectedMarkers(gray, tagCorners, tagIDs)
+        # # for visual debugging
+        # cv2.aruco.drawDetectedMarkers(gray, tagCorners, tagIDs)
         #gray1 = cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
         #gray2 = cv2.aruco.drawAxis(gray, np.asarray(camera_matrix), np.asarray(dist_coeff), rvec, tvec, 100)
     cv2.imshow("frame", gray)
@@ -167,6 +233,10 @@ print("number of tags identified in each frame:\n" + str(numDetected))
 # take average of all detected corners and IDs
 print("Number of valid frames: " + str(len(allCorners)))
 print("Number of bottom tags in each valid frame:\n" + str(numBottom))
+print("Number of leftmost tags in each valid frame:\n" + str(numLeft))
+print("Left-measured heights:\n" + str(heightsLeft))
+print("Number of rightmost tags in each valid frame:\n" + str(numRight))
+print("Right-measured heights:\n" + str(heightsRight))
 # avgCorners = corners_avg(allCorners)
 # print(avgCorners)
 # avgIDs = ids_avg(allIDs)
