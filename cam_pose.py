@@ -186,7 +186,7 @@ for i in range(100):
     if tagCorners is not None and tagIDs is not None and numTags >= numTagsThreshold:
         # For each corner (set of 4 points), sort its points in counterclockwise order, starting with top-left point
         # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
-        sortedCorners = [order_points(tagCorners[i][0]) for i in range(numTags)]
+        sortedCorners = [order_points(tagCorners[j][0]) for j in range(numTags)]
 
         highestYval = highest_y_val(sortedCorners)
         numBottomTags = num_bottom_tags(sortedCorners, highestYval, errorMargin)
