@@ -54,14 +54,14 @@ def ids_avg(IDsList):
 
     return avgSamples
 
-# given two tag corners, return 0 if the first tag has the highest y value, else 1
-# NOTE: careful not to confuse "highest y value" with "physically at the top" (double-check coordinate system)
+# given two tag corners, return 0 if the first tag has the lowest y value, else 1
+# NOTE: assumes lower y value = physically higher location
 # NOTE: assumes y coordinate is the second value in a 2d-coordinate pair
 def id_above(corners):
     ymin0 = min(corners[0][i][1] for i in range(4))
     ymin1 = min(corners[1][i][1] for i in range(4))
 
-    return 0 if ymin0 > ymin1 else 1
+    return 0 if ymin0 < ymin1 else 1
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -122,6 +122,7 @@ while True:
         break
 
 # take average of all detected corners and IDs
+print("Number of valid samples: " + str(len(allCorners)))
 avgCorners = corners_avg(allCorners)
 print(avgCorners)
 avgIDs = ids_avg(allIDs)
@@ -131,8 +132,8 @@ print (numIds)
 
 id_above, id_below = (avgIDs[0], avgIDs[1]) if id_above(avgCorners) == 0 else (avgIDs[1], avgIDs[0])
 
-print(id_above)
-print(id_below)
+print("id_above: " + str(id_above))
+print("id_below: " + str(id_below))
 
 cap.release()
 cv2.destroyAllWindows()
