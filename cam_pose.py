@@ -194,9 +194,9 @@ errorMargin = 5
 # distance between top left corner of bottom AR tag and bottom left corner of top AR tag
 botToTopDistance = 100
 # margin from side edge to qualify a point as being in the center region
-sideMargin = 10
+sideMargin = 25
 # margin from bottom edge to qualify a point as being in the center region
-botMargin = 10
+botMargin = 25
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -212,6 +212,7 @@ numBottom = []
 
 numLeft = []
 numRight = []
+numMiddle = []
 
 # keep track of height measurements
 # list of tuples of the form (i, height)
@@ -263,6 +264,7 @@ for i in range(100):
         # collect information about the tags on the center reigon of the board, to determine degree of horizontal openness
         middleTags = middle_tags(sortedCorners, sideMargin, botMargin)
         numMiddleTags = len(middleTags)
+        numMiddle.append(numMiddleTags)
         # assuming there are 4 tags in the middle section of the fume hood
         if numMiddleTags == 4:
             # calculate horizontal distances between tags
@@ -302,6 +304,7 @@ print("Number of leftmost tags in each valid frame:\n" + str(numLeft))
 print("Left-measured heights:\n" + str(heightsLeft))
 print("Number of rightmost tags in each valid frame:\n" + str(numRight))
 print("Right-measured heights:\n" + str(heightsRight))
+print("Number of middle tags in each valid frame:\n" + str(numMiddle))
 # avgCorners = corners_avg(allCorners)
 # print(avgCorners)
 # avgIDs = ids_avg(allIDs)
