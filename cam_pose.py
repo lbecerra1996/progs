@@ -47,6 +47,16 @@ def corners_avg(cornersList):
 
     return sumSamples/numSamples
 
+# given the coordinates of several corners, return their average coordinate
+def avg_corner(corners):
+    n = len(corners) if corners is not None else 0
+    if n == 0:
+        return None
+    sum_points = np.zeros_like(corners[0])
+    for point in corners:
+        sum_points += point
+    return sum_points / n
+
 def ids_avg(IDsList):
     numSamples = len(IDsList)
     numIDs = len(IDsList[0])
@@ -64,7 +74,9 @@ def id_above(corners):
 
     return 0 if ymin0 < ymin1 else 1
 
-
+# given a list of tags' corners, determine lowest x value
+# NOTE: assumes lowest x value = left-most physical location
+# NOTE: assumes x coordinate is the first value in a 2d-coordinate pair
 def lowest_x_val(cornersList):
     minX = 10000
     for corners in cornersList:
@@ -74,6 +86,9 @@ def lowest_x_val(cornersList):
                 minX = x
     return minX
 
+# given a list of tags' corners, determine highest x value
+# NOTE: assumes highest x value = right-most physical location
+# NOTE: assumes x coordinate is the first value in a 2d-coordinate pair
 def highest_x_val(cornersList):
     maxX = 0
     for corners in cornersList:
@@ -83,6 +98,8 @@ def highest_x_val(cornersList):
                 maxX = x
     return maxX
 
+# given a list of tags' corners, x value and margin, and a boolean indicating left or right,
+# outputs the corners of tags in the left or right edge (depending on value of isLeft)
 def edge_tags(cornersList, x_val, error_margin, isLeft):
     edgeTags = []
     for corners in cornersList:
@@ -94,8 +111,6 @@ def edge_tags(cornersList, x_val, error_margin, isLeft):
                 edgeTags.append(corners)
                 break
     return edgeTags
-
-
 
 # given a list of tags' corners, determine highest y value
 # NOTE: assumes higher y value = lower physical location
@@ -130,6 +145,24 @@ def measure_height(threeCorners, bot_to_top_distance):
     bot_to_mid = botCorners[0][1] - midCorners[3][1]
 
     return (bot_to_top_distance) * (bot_to_mid/bot_to_top)
+
+# given a list of tags' corners, sizes of side and bottom margins, return list of coordinates of the tags in the middle region
+# NOTE: assumes higher y value = lower physical location, higher x value = righter-most physical location
+# NOTE: assumes (x,y) 2d-coordinate system
+def middle_tags(cornersList, side_margin, bot_margin):
+    x_low, x_high, y_high = lowest_x_val(cornersList), highest_x_val(cornersList), highest_y_val(cornersList)
+    middleTags = []
+    for corners in cornersList:
+        avgCorner = avg_corner(corners)
+        x, y = avgCorner
+        isHighEnough = (y < y_high - bot_margin)
+        isRightEnough = (x > x_low + side_margin)
+        isLeftEnough = (x < x_high - side_margin)
+        isInCenter = isHighEnough and isRightEnough and isLeftEnough
+        if isInCenter:
+            middleTags.append(corners)
+    return middleTags
+
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
