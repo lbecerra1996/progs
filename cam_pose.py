@@ -242,12 +242,12 @@ for i in range(100):
         if not marginsFixed:
             # difference between x values of top-left and top-right corners of one tag
             # is a reasonable approximate for the AR tags' edge size
-            edgeSize = sortedCorners[0][0][0] - sortedCorners[0][1][0]
+            edgeSize = abs(sortedCorners[0][0][0] - sortedCorners[0][1][0])
             errorMargin = edgeSize / 2
             print("new error margin: " + str(errorMargin))
             sideMargin, botMargin = (edgeSize * 1.5, edgeSize * 1.5)
             print("new side and bottom margin: " + str(sideMargin))
-            marginsDixed = True
+            marginsFixed = True
 
         # count the number of tags at the bottom (for motion detection purposes)
         highestYval = highest_y_val(sortedCorners)
