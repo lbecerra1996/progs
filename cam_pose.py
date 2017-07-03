@@ -189,14 +189,14 @@ square_length = 6.35    # cm
 markerLength = 5.08     # cm
 # number of AR tags we're using
 numTagsThreshold = 2
-# error margin for determining if a tag counts as a bottom tag
+# arbitrary error margin for determining if a tag counts as a bottom tag
 errorMargin = 5
 # distance between top left corner of bottom AR tag and bottom left corner of top AR tag
 botToTopDistance = 100
-# margin from side edge to qualify a point as being in the center region
-sideMargin = 10
-# margin from bottom edge to qualify a point as being in the center region
-botMargin = 10
+# arbitrary margin from side edge to qualify a point as being in the center region
+sideMargin = 25
+# arbitrary margin from bottom edge to qualify a point as being in the center region
+botMargin = 25
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -212,11 +212,14 @@ numBottom = []
 
 numLeft = []
 numRight = []
+numMiddle = []
 
 # keep track of height measurements
 # list of tuples of the form (i, height)
 heightsLeft = []
 heightsRight = []
+
+marginsFixed = False
 
 # initialize video stream capture
 cap = cv2.VideoCapture(0)       # 0 for default camera, 1 for external connection
@@ -228,7 +231,6 @@ for i in range(100):
     # unclear: does res contain the same ordering for IDs and matching corners?
     tagCorners, tagIDs = res[0], res[1]
     numTags = len(tagIDs) if tagIDs is not None else 0
-
     numDetected.append(numTags)
 
     # check that all IDs and corners were detected
@@ -236,6 +238,16 @@ for i in range(100):
         # For each corner (set of 4 points), sort its points in counterclockwise order, starting with top-left point
         # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
         sortedCorners = [order_points(tagCorners[j][0]) for j in range(numTags)]
+
+        if not marginsFixed:
+            # difference between x values of top-left and top-right corners of one tag
+            # is a reasonable approximate for the AR tags' edge size
+            edgeSize = sortedCorners[0][0][0] - sortedCorners[0][1][0]
+            errorMargin = edgeSize / 2
+            print("new error margin: " + str(errorMargin))
+            sideMargin, botMargin = (edgeSize * 1.5, edgeSize * 1.5)
+            print("new side and bottom margin: " + str(sideMargin))
+            marginsDixed = True
 
         # count the number of tags at the bottom (for motion detection purposes)
         highestYval = highest_y_val(sortedCorners)
@@ -263,6 +275,7 @@ for i in range(100):
         # collect information about the tags on the center reigon of the board, to determine degree of horizontal openness
         middleTags = middle_tags(sortedCorners, sideMargin, botMargin)
         numMiddleTags = len(middleTags)
+        numMiddle.append(numMiddleTags)
         # assuming there are 4 tags in the middle section of the fume hood
         if numMiddleTags == 4:
             # calculate horizontal distances between tags
@@ -302,6 +315,7 @@ print("Number of leftmost tags in each valid frame:\n" + str(numLeft))
 print("Left-measured heights:\n" + str(heightsLeft))
 print("Number of rightmost tags in each valid frame:\n" + str(numRight))
 print("Right-measured heights:\n" + str(heightsRight))
+print("Number of middle tags in each valid frame:\n" + str(numMiddle))
 # avgCorners = corners_avg(allCorners)
 # print(avgCorners)
 # avgIDs = ids_avg(allIDs)
