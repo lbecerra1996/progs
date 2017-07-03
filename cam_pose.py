@@ -6,6 +6,8 @@ import numpy as np
 import yaml
 import os
 
+# TO DO: add try-except mechanisms!
+
 # given a list of four points, returns a numpy array of them in counterclockwise order, starting with top-left
 # NOTE: assumes pts has 4 elements
 def order_points(pts):
@@ -163,6 +165,16 @@ def middle_tags(cornersList, side_margin, bot_margin):
             middleTags.append(corners)
     return middleTags
 
+# given a list of tags' corners, returns list horizontal pairwise distances between tags
+# NOTE: assumes x coordinate is first coordinate
+def horizontal_distances(cornersList):
+    # extract the x_values of each tag's top-left corner
+    x_values = map(lambda corners: corners[0][0], cornersList)
+    # sort the x values in increasing order
+    sorted_x = sorted(x_values)
+    # determine horizontal distances between tags
+    dists = [(sorted_x[i+1] - sorted_x[i]) for i in range(len(sorted_x) - 1)]
+    return dists
 
 # open yaml file containing calibration data
 with open("calibration.yaml") as f:
@@ -181,6 +193,10 @@ numTagsThreshold = 2
 errorMargin = 5
 # distance between top left corner of bottom AR tag and bottom left corner of top AR tag
 botToTopDistance = 100
+# margin from side edge to qualify a point as being in the center region
+sideMargin = 10
+# margin from bottom edge to qualify a point as being in the center region
+botMargin = 10
 dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
 board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
 arucoParams = aruco.DetectorParameters_create()
@@ -221,10 +237,12 @@ for i in range(100):
         # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
         sortedCorners = [order_points(tagCorners[j][0]) for j in range(numTags)]
 
+        # count the number of tags at the bottom (for motion detection purposes)
         highestYval = highest_y_val(sortedCorners)
         numBottomTags = num_bottom_tags(sortedCorners, highestYval, errorMargin)
         numBottom.append(numBottomTags)
 
+        # collect information on the leftmost tags, to determine degree of vertical openness
         lowestXval =  lowest_x_val(sortedCorners)
         leftTags = edge_tags(sortedCorners, lowestXval, errorMargin, isLeft=True)
         numLeftTags = len(leftTags)
@@ -233,6 +251,7 @@ for i in range(100):
             heightLeft = measure_height(leftTags, botToTopDistance)
             heightsLeft.append((i, heightLeft))
 
+        # collect information on the rightmost tags, to determine degree of vertical openness (identical to leftmost tags process)
         highestXval =  highest_x_val(sortedCorners)
         rightTags = edge_tags(sortedCorners, highestXval, errorMargin, isLeft=False)
         numRightTags = len(rightTags)
@@ -240,6 +259,19 @@ for i in range(100):
         if numRightTags == 3:
             heightRight = measure_height(rightTags, botToTopDistance)
             heightsRight.append((i, heightRight))
+
+        # collect information about the tags on the center reigon of the board, to determine degree of horizontal openness
+        middleTags = middle_tags(sortedCorners, sideMargin, botMargin)
+        numMiddleTags = len(middleTags)
+        # assuming there are 4 tags in the middle section of the fume hood
+        if numMiddleTags == 4:
+            # calculate horizontal distances between tags
+            d_1, d_2, d_3 = horizontal_distances(middleTags)  # supposed to be a list of three values
+
+            # TO DO: add method to determine degree of openness based on these distances
+            # might need to know edge coordinates too? (and those distances too)
+
+            #TO DO: store this information in a dedicated list similar to the ones for height measurements
 
         # TO DO: make sure order of IDs matches order of corners
         # edit: not sure if this is relevant/ important
