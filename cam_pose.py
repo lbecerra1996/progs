@@ -6,6 +6,9 @@ import numpy as np
 import yaml
 import os
 
+square_length = 6.35    # cm
+markerLength = 5.08     # cm
+
 # TO DO: add try-except mechanisms!
 
 # given a list of four points, returns a numpy array of them in counterclockwise order, starting with top-left
@@ -176,55 +179,108 @@ def horizontal_distances(cornersList):
     dists = [(sorted_x[i+1] - sorted_x[i]) for i in range(len(sorted_x) - 1)]
     return dists
 
-# open yaml file containing calibration data
-with open("calibration.yaml") as f:
-    calibration_data = yaml.load(f)
 
-# extract relevant information from calibration data
-# convert to numpy arrays for usage in OpenCV/ARUCO functions
-camera_matrix = np.asarray(calibration_data['camera_matrix'])
-dist_coeff = np.asarray(calibration_data['dist_coeff'])
+def vertical_main(cap, duration=2, botToTopDistance=100, numOnSides=3):
+    # open yaml file containing calibration data
+    with open("calibration.yaml") as f:
+        calibration_data = yaml.load(f)
 
-square_length = 6.35    # cm
-markerLength = 5.08     # cm
-# number of AR tags we're using
-numTagsThreshold = 2
-# arbitrary error margin for determining if a tag counts as a bottom tag
-errorMargin = 5
-# distance between top left corner of bottom AR tag and bottom left corner of top AR tag
-botToTopDistance = 100
-# arbitrary margin from side edge to qualify a point as being in the center region
-sideMargin = 25
-# arbitrary margin from bottom edge to qualify a point as being in the center region
-botMargin = 25
-dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
-board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
-arucoParams = aruco.DetectorParameters_create()
-#img = board.draw((700*4,700*2))
+    # extract relevant information from calibration data
+    # convert to numpy arrays for usage in OpenCV/ARUCO functions
+    camera_matrix = np.asarray(calibration_data['camera_matrix'])
+    dist_coeff = np.asarray(calibration_data['dist_coeff'])
 
-# initialize lists to store all detected corners and IDs
-allCorners = []
-allIDs = []
-# keeps track of number of detected tags in each video frame/sample
-numDetected = []
-# keeps track of number of bottom tags detected in each valid video frame / sample
-numBottom = []
+    # number of AR tags we're using
+    numTagsThreshold = 2
+    # arbitrary error margin for determining if a tag counts as a bottom tag
+    errorMargin = 5
+    # distance between top left corner of bottom AR tag and bottom left corner of top AR tag
+    botToTopDistance = 100
+    # arbitrary margin from side edge to qualify a point as being in the center region
+    sideMargin = 25
+    # arbitrary margin from bottom edge to qualify a point as being in the center region
+    botMargin = 25
+    dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
+    board = cv2.aruco.CharucoBoard_create(4, 2, square_length, markerLength, dictionary)
+    arucoParams = aruco.DetectorParameters_create()
+    #img = board.draw((700*4,700*2))
 
-numLeft = []
-numRight = []
-numMiddle = []
+    # initialize lists to store all detected corners and IDs
+    allCorners = []
+    allIDs = []
+    # keeps track of number of detected tags in each video frame/sample
+    numDetected = []
+    # keeps track of number of bottom tags detected in each valid video frame / sample
+    numBottom = []
 
-# keep track of height measurements
-# list of tuples of the form (i, height)
-heightsLeft = []
-heightsRight = []
+    numLeft = []
+    numRight = []
+    numMiddle = []
 
-marginsFixed = False
+    # keep track of height measurements
+    # list of tuples of the form (i, height)
+    heightsLeft = []
+    heightsRight = []
 
-# initialize video stream capture
-cap = cv2.VideoCapture(0)       # 0 for default camera, 1 for external connection
+    marginsFixed = False
+
+    # iterate over arbitrary amount of frames
+    while cap.isOpened() and (datetime.datetime.now() - startTime).total_seconds() < duration:
+        ret, frame = cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
+        # unclear: does res contain the same ordering for IDs and matching corners?
+        tagCorners, tagIDs = res[0], res[1]
+        numTags = len(tagIDs) if tagIDs is not None else 0
+        numDetected.append(numTags)
+
+        # check that all IDs and corners were detected
+        if tagCorners is not None and tagIDs is not None and numTags >= numTagsThreshold:
+            # For each corner (set of 4 points), sort its points in counterclockwise order, starting with top-left point
+            # NOTE: sortedCorners is a list of numpy arrays, one for each tag's set of four points
+            sortedCorners = [order_points(tagCorners[j][0]) for j in range(numTags)]
+
+            if not marginsFixed:
+                # difference between x values of top-left and top-right corners of one tag
+                # is a reasonable approximate for the AR tags' edge size
+                edgeSize = abs(sortedCorners[0][0][0] - sortedCorners[0][1][0])
+                errorMargin = edgeSize / 2
+                print("new error margin: " + str(errorMargin))
+                sideMargin, botMargin = (edgeSize * 1.5, edgeSize * 1.5)
+                print("new side and bottom margin: " + str(sideMargin))
+                marginsFixed = True
+
+            # collect information on the leftmost tags, to determine degree of vertical openness
+            lowestXval =  lowest_x_val(sortedCorners)
+            leftTags = edge_tags(sortedCorners, lowestXval, errorMargin, isLeft=True)
+            numLeftTags = len(leftTags)
+            numLeft.append(numLeftTags)
+            if numLeftTags == numOnSides:
+                heightLeft = measure_height(leftTags, botToTopDistance)
+                heightsLeft.append((i, heightLeft))
+
+            # collect information on the rightmost tags, to determine degree of vertical openness (identical to leftmost tags process)
+            highestXval =  highest_x_val(sortedCorners)
+            rightTags = edge_tags(sortedCorners, highestXval, errorMargin, isLeft=False)
+            numRightTags = len(rightTags)
+            numRight.append(numRightTags)
+            if numRightTags == numOnSides:
+                heightRight = measure_height(rightTags, botToTopDistance)
+                heightsRight.append((i, heightRight))
+
+            # store corners and IDs (not sure if necessary)
+            allCorners.append(sortedCorners)
+            allIDs.append(tagIDs)
+
+    leftAvg = float(sum(heightsLeft))/len(heightsLeft) if heightsLeft else -1
+    rightAvg = float(sum(heightsRight))/len(heightsRight) if heightsRight else -1
+    print "Left height average: " + str(leftAvg)
+    print "Right height average: " + str(rightAvg)
+    return max(leftAvg, rightAvg)
+# -----------------------------------------------------------------------------------------------
+
 # iterate over arbitrary amount of frames
-for i in range(100):
+while cap.isOpened() and (datetime.datetime.now() - startTime).total_seconds() < duration:
     ret, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
@@ -327,7 +383,8 @@ print("Number of middle tags in each valid frame:\n" + str(numMiddle))
 
 # print("id_above: " + str(id_above))
 # print("id_below: " + str(id_below))
-
+# initialize video stream capture
+cap = cv2.VideoCapture(0)       # 0 for default camera, 1 for external connection
 cap.release()
 cv2.destroyAllWindows()
 

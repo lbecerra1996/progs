@@ -7,6 +7,7 @@ import numpy as np
 import yaml
 import os
 from motion_detect import detect_motion
+from cam_pose import vertical_main as fume_hood_height
 
 
 # threshold to determine if fume hood is "open enough" to trigger alarm
@@ -22,6 +23,9 @@ TIME_TO_ALARM = 30	# seconds
 
 # minimum amount of time between two measurements
 SLEEP_INTERVAL = 20
+
+HEIGHT_DURATION = 2
+MOTION_DURATION = 2
 
 # initialize variable to keep track of time ellapsed between two measurements
 # used for integrating power
@@ -49,7 +53,7 @@ while not finished:
 	# NOTE: assume that this takes a non-trivial amount of time
 	try:
 		# TO DO: actually get sash state
-		sashHeight = 0
+		sashHeight = fume_hood_height(cap, HEIGHT_DURATION)
 	except:
 		print "Error computing sashHeight, defaults to 0"
 		sashHeight = 0
@@ -60,7 +64,7 @@ while not finished:
 		# # TO DO: actually check for motion
 		# first arg: video capture
 		# second arg: duration for which to check for motion (in seconds)
-		motion = detect_motion(cap, 2)
+		motion = detect_motion(cap, MOTION_DURATION)
 	except:
 		print "Error computing motion, defaults to 0"
 		motion = 0
