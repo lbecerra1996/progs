@@ -180,7 +180,7 @@ def horizontal_distances(cornersList):
     return dists
 
 
-def vertical_main(cap, duration=2, botToTopDistance=100, numOnSides=3):
+def vertical_main(video_cap, duration=2, botToTopDistance=100, numOnSides=3):
     # open yaml file containing calibration data
     with open("calibration.yaml") as f:
         calibration_data = yaml.load(f)
@@ -225,8 +225,8 @@ def vertical_main(cap, duration=2, botToTopDistance=100, numOnSides=3):
     marginsFixed = False
 
     # iterate over arbitrary amount of frames
-    while cap.isOpened() and (datetime.datetime.now() - startTime).total_seconds() < duration:
-        ret, frame = cap.read()
+    while video_cap.isOpened() and (datetime.datetime.now() - startTime).total_seconds() < duration:
+        ret, frame = video_cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
         # unclear: does res contain the same ordering for IDs and matching corners?
