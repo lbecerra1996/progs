@@ -44,7 +44,6 @@ while cap.isOpened() and i < 20:
     ( _,cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     motion = 0
     for c in cnts:
-        print "hi"
         #if contour is small (too insignificant) then ignore it
         if cv2.contourArea(c) > args["min_area"]:
             motion = 1
