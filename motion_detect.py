@@ -5,20 +5,20 @@ import time
 import cv2
 
 #binary output
-motion = 0
+motion_list = []
 ap = argparse.ArgumentParser()
 #define minimum pixel size of region of frame to be considered actual motion
-ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+ap.add_argument("-a", "--min-area", type=int, default=100, help="minimum area size")
 args = vars(ap.parse_args())
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 time.sleep(0.25)
 #initialize first frame
-firstFrame = None
-
-while cap.isOpened():
+prevFrame = None
+i = 0
+while cap.isOpened() and i < 20:
     ret, frame = cap.read()
-    text = "Unoccupied"
+    start = time.time()
     #if no frame, end of video
     if not ret:
         break
@@ -31,40 +31,29 @@ while cap.isOpened():
     gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
     #initialize firstFrame
-    if firstFrame is None:
-        firstFrame = gray
+    if prevFrame is None:
+        prevFrame = gray
 
     #subtract frames
-    frameDelta = cv2.absdiff(firstFrame, gray)
+    frameDelta = cv2.absdiff(prevFrame, gray)
     #threshold delta to reveal regions with significan changes in pixel intensity
     #if delta < 25, disregard, else, count as motion
     thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
     #dilate image(fill in holes with white) and find contours
     thresh = cv2.dilate(thresh, None, iterations=2)
     ( _,cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+    motion = 0
     for c in cnts:
+        print "hi"
         #if contour is small (too insignificant) then ignore it
-        if cv2.contourArea(c) < args["min_area"]:
-            motion = 0
-        else:
+        if cv2.contourArea(c) > args["min_area"]:
             motion = 1
-        """#draw box of movement
-        (x,y,w,h) = cv2.boundingRect(c)
-        cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 255, 0), 2)
-        text = "Motion Detected"
+            #print motion
+    motion_list.append(motion)
+    prevFrame = gray
 
-        #optional time and date with status
-        cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] -10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+    i += 1
 
-        cv2.imshow("Security Feed", frame)
-        cv2.imshow("Thresh", thresh)
-        cv2.imshow("Frame Delta", frameDelta)"""
-        cv2.imshow("Security Feed", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-print(motion)
+print motion_list
 cap.release()
 cv2.destroyAllWindows()
