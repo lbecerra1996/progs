@@ -1,0 +1,44 @@
+    1  sudo apt-add-repository universe
+    2  sudo apt-get update
+    3  sudo apt-get install chromium
+    4  sudo apt-get install chromium-browser
+    9  sudo dpkg -i cuda-repo-l4t-r21.2-6-5-prod_6.5-34_armhf.deb 
+   10  sudo apt-get update
+   11  sudo apt-get install cuda-toolkit-6-5
+   12  sudo usermod -a -G video $USER
+   13  vim ~/.bashrc
+   14  source ~/.bashrc
+   15  nvcc -V
+   17  sudo add-apt-repository universe
+   18  sudo apt-get update
+   19  sudo apt-get -y install build-essential make cmake cmake-curses-gui g++
+   20  sudo apt-get -y install libavformat-dev libavutil-dev libswscale-dev
+   21  sudo apt-get -y install libv4l-dev
+   22  sudo apt-get -y install libeigen3-dev
+   23  sudo apt-get -y install libglew1.6-dev
+   24  sudo apt-get -y install libgtk2.0-dev
+   27  wget https://github.com/opencv/opencv/archive/3.2.0.zip
+   28  unzip 3.2.0.zip
+   29  mv opencv-3.2.0 ~/
+   30  cd ~/opencv-3.2.0
+   31  mkdir build
+   32  cd build
+   36  wget https://github.com/opencv/opencv_contrib/archive/3.2.0.zip
+   37  unzip 3.2.0.zip
+   38  mv opencv_contrib-3.2.0 ~/
+   39  cd ~/opencv-3.2.0/build
+   49  echo "# Use OpenCV and other custom-built libraries." >> ~/.bashrc
+   50  echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> ~/.bashrc
+   76  sudo apt-get install python2.7-dev
+   78  sudo apt-get install pip
+   79  sudo apt-get install python-setuptools python-dev build-essential
+   80  sudo easy_install pip
+  143  sudo apt-get install build-essential
+  144  sudo apt-get install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+  145  sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
+  153  sudo apt-get install python-numpy
+  157  pip install pyopenssl ndg-httpsclient pyasn1
+  165  sudo pip install numpy --upgrade -v
+  09  cmake -DWITH_CUDA=ON -DCUDA_ARCH_BIN="3.2" -DCUDA_ARCH_PTX="" -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DCMAKE_BUILD_TYPE=RELEASE -DOPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.2.0/modules -DINSTALL_PYTHON_EXAMPLES=ON -D  -DBUILD_opencv_world=OFF -DBUILD_opencv_python2=ON -DINSTALL_C_EXAMPLES=OFF  ..
+  210  make -j7
+  211  sudo make install
