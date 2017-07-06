@@ -6,6 +6,7 @@ import cv2.aruco as aruco
 import numpy as np
 import yaml
 import os
+from motion_detect import detect_motion
 
 
 # threshold to determine if fume hood is "open enough" to trigger alarm
@@ -32,6 +33,8 @@ timeLastUsed = datetime.datetime.now()
 # initialize video capture
 cap = cv2.VideoCapture(0)
 
+data = []
+
 finished = 0
 while not finished:
 	# time elapsed (in seconds) since last measurement
@@ -55,7 +58,9 @@ while not finished:
 	# NOTE: assume that this takes a non-trivial amount of time
 	try:
 		# # TO DO: actually check for motion
-		motion = 0
+		# first arg: video capture
+		# second arg: duration for which to check for motion (in seconds)
+		motion = detect_motion(cap, 2)
 	except:
 		print "Error computing motion, defaults to 0"
 		motion = 0
@@ -81,11 +86,17 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
+	data.append((sashState, motion, timeElapsed))
+
+	print "Data so far: " + str(data)
+
 	# wait until SLEEP_INTERVAL is over before making the next measurement
 	# listen for 'q' as a signal to quit
 	while (datetime.datetime.now() - prevTime).total_seconds() < SLEEP_INTERVAL:
 	    if cv2.waitKey(1) & 0xFF == ord('q'):
 	        finished = 1
+
+print(data)
 
 cap.release()
 cv2.destroyAllWindows()
