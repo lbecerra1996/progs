@@ -86,7 +86,7 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
-	data.append((sashState, motion, timeElapsed))
+	data.append((sashHeight, motion, timeElapsed))
 
 	print "Data so far: " + str(data)
 

@@ -53,7 +53,7 @@ def detect_motion(cap, duration, frameThreshold=25):
         motion_list.append(motion)
         prevFrame = gray
 
-    return sum(motion_list)/len(motion_list) if motion_list else 0
-    
+    return float(sum(motion_list))/len(motion_list) if motion_list else -1
+
 cap.release()
 cv2.destroyAllWindows()
