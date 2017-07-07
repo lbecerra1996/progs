@@ -1,5 +1,4 @@
 from scipy.spatial import distance as dist
-import time
 import datetime
 import cv2
 import cv2.aruco as aruco
@@ -99,14 +98,15 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
-	data.append((datetime.datetime.now(), timeElapsed, sashHeight, motion))
+	data.append((stre(datetime.datetime.now()), timeElapsed, sashHeight, motion))
 
 	with open(file_name, "a") as f:
 		data_string = ""
 		for data_entry in data:
-			string += ",".join([str(e) for e in data_entry])
-		f.write(string)
-
+			data_string += ",".join([str(e) for e in data_entry])
+		# clear data so that it doesn't get repeated in future writes
+		data = []
+		f.write(data_string)
 
 	# wait until SLEEP_INTERVAL is over before making the next measurement
 	# listen for 'q' as a signal to quit
