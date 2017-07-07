@@ -7,7 +7,7 @@ import numpy as np
 import yaml
 import os
 from motion_detect import detect_motion
-from cam_pose import vertical_main as fume_hood_height
+from fume_hood_ar_logic import vertical_main as fume_hood_height
 
 
 # threshold to determine if fume hood is "open enough" to trigger alarm
@@ -34,10 +34,20 @@ prevTime = datetime.datetime.now()
 # initialize variable to keep track of the last time the fume hood was in use
 timeLastUsed = datetime.datetime.now()
 
+date_string = str(datetime.datetime.now().date())
+
+file_name = "fume_data_" + date_string + ".csv"
+
+with open(file_name, "w") as f:
+	f.write("Fume Hood Data Log: " + date_string + "\n")
+
 # initialize video capture
 cap = cv2.VideoCapture(0)
 
 data = []
+
+recording_start = datetime.datetime.now()
+RECORDING_LENGTH = 60 # seconds
 
 finished = 0
 while not finished:
@@ -70,16 +80,15 @@ while not finished:
 		motion = 0
 
 	# if there is motion (i.e. the fume hood is currently in use), update the value of timeLastUsed
-	if motion > 0:
+	if motion > MOTION_THRESHOLD:
 		timeLastUsed = datetime.datetime.now()
 
 	# compute the time elapsed (in seconds) since the fume hood was last used
 	timeSinceUse = (datetime.datetime.now() - timeLastUsed).total_seconds()
 
 	# signal to turn alarm on(1)/off(0)
-	# if the sash is open and hasn't been in use, turn on alarm (under appropriate circumnstances?)
-	# unsure if this is the best logic for turning alarm off
-	alarm = 1 if (sashHeight > HEIGHT_THRESHOLD) and (motion < MOTION_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
+	# if the sash is open and hasn't been in use, turn on alarm
+	alarm = 1 if (sashHeight > HEIGHT_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
 	if alarm:
 		print "ALARM ON"
 		# TO DO: actually turn on alarm
@@ -90,15 +99,24 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
-	data.append((sashHeight, motion, timeElapsed))
+	data.append((datetime.datetime.now(), timeElapsed, sashHeight, motion))
 
-	print "Data so far: " + str(data)
+	with open(file_name, "a") as f:
+		data_string = ""
+		for data_entry in data:
+			string += ",".join([str(e) for e in data_entry])
+		f.write(string)
+
 
 	# wait until SLEEP_INTERVAL is over before making the next measurement
 	# listen for 'q' as a signal to quit
 	while (datetime.datetime.now() - prevTime).total_seconds() < SLEEP_INTERVAL:
 	    if cv2.waitKey(1) & 0xFF == ord('q'):
 	        finished = 1
+
+	# since pressing 'q' doesn't seem to work, terminate program after RECORDING_LENGTH has elapsed
+	if (datetime.datetime.now() - recording_start).total_seconds() > RECORDING_LENGTH:
+		finished = 1
 
 print(data)
 
