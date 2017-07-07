@@ -11,11 +11,11 @@ from fume_hood_ar_logic import vertical_main as fume_hood_height
 
 # threshold to determine if fume hood is "open enough" to trigger alarm
 # sashHeight is a number between 0 and 1 indicating ratio of sash height / maximum height
-HEIGHT_THRESHOLD = 0.5
+HEIGHT_THRESHOLD = 50
 
 # threshold to determine if there is enough motion for the sash to be in use
 # motion is a number between 0 and 1 (with a higher value indicating more motion)
-MOTION_THRESHOLD = 0.2
+MOTION_THRESHOLD = 0.05
 
 # amount of time the fume hood has to be open and without use before triggering the alarm
 TIME_TO_ALARM = 30	# seconds
@@ -24,7 +24,7 @@ TIME_TO_ALARM = 30	# seconds
 SLEEP_INTERVAL = 20
 
 HEIGHT_DURATION = 2
-MOTION_DURATION = 2
+MOTION_DURATION = 15
 
 # initialize variable to keep track of time ellapsed between two measurements
 # used for integrating power
@@ -98,7 +98,7 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
-	data.append((str(datetime.datetime.now()), timeElapsed, sashHeight, motion))
+	data.append((str(datetime.datetime.now()), timeElapsed, sashHeight, motion, "alarm: {}".format(alarm)))
 
 	with open(file_name, "a") as f:
 		data_string = ""
