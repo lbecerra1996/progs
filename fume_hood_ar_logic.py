@@ -144,7 +144,7 @@ def vertical_main(video_cap, duration=2, botToTopDistance=100, numOnSides=3, sid
     while video_cap.isOpened() and (datetime.datetime.now() - startTime).total_seconds() < duration:
         ret, frame = video_cap.read()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        res = cv2.aruco.detectMarkers(gray, dictionary, parameters=arucoParams)
+        res = cv2.aruco.detectMarkers(gray, AR_tag_dictionary, parameters=arucoParams)
         # unclear: does res contain the same ordering for IDs and matching corners?
         tagCorners = res[0]
         numTags = len(tagCorners) if tagCorners is not None else 0

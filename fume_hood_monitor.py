@@ -98,12 +98,12 @@ while not finished:
 	# TO DO: add info to data file
 	# include sashState, motion, timeElapsed
 
-	data.append((stre(datetime.datetime.now()), timeElapsed, sashHeight, motion))
+	data.append((str(datetime.datetime.now()), timeElapsed, sashHeight, motion))
 
 	with open(file_name, "a") as f:
 		data_string = ""
 		for data_entry in data:
-			data_string += ",".join([str(e) for e in data_entry])
+			data_string += ",".join([str(e) for e in data_entry]) + '\n'
 		# clear data so that it doesn't get repeated in future writes
 		data = []
 		f.write(data_string)
