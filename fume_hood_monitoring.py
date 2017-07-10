@@ -5,8 +5,6 @@ import datetime
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-import yaml
-import os
 from motion_detect import detect_motion
 from fume_hood_ar_logic import vertical_main as fume_hood_height
 
@@ -49,8 +47,10 @@ class FumeHood():
 		while not finished:
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
 
+			prevTime = datetime.datetime.now()
+
 			try:
-				sashHeight = fume_hood_height(cap, HEIGHT_DURATION, MAX_HEIGHT)
+				sashHeight = fume_hood_height(cap, HEIGHT_DURATION)
 			except:
 				print "Error computing sashHeight, defaults to 0"
 				sashHeight = 0
@@ -63,7 +63,7 @@ class FumeHood():
 				motion = 0
 
 			# if there is motion (i.e. the fume hood is currently in use), update the value of timeLastUsed
-			if motion > MOTION_THRESHOLD:
+			if motion > self.MOTION_THRESHOLD:
 				timeLastUsed = datetime.datetime.now()
 
 			# compute the time elapsed (in seconds) since the fume hood was last used
@@ -71,10 +71,10 @@ class FumeHood():
 
 			# signal to turn alarm on(1)/off(0)
 			# if the sash is open and hasn't been in use, turn on alarm
-			alarm_signal = 1 if (sashHeight > HEIGHT_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
+			alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
 			self.alarm(alarm_signal)
 
-			data.append((str(datetime.datetime.now()), timeElapsed, sashHeight, motion, "alarm: {}".format(alarm_signal)))
+			data.append((str(datetime.datetime.now()), timeStep, sashHeight, motion, "alarm: {}".format(alarm_signal)))
 			# optional: if we wanted to store data every X iterations, we would incorporate that feature here
 			if True:
 				self.write(data)
@@ -84,7 +84,7 @@ class FumeHood():
 			# listen for 'q' as a signal to quit
 			# NOTE: if alarm is on, bypass this wait time to avoid taking too long to turn off alarm
 			if not alarm_signal:
-				while (datetime.datetime.now() - prevTime).total_seconds() < LOG_FREQ:
+				while (datetime.datetime.now() - prevTime).total_seconds() < self.LOG_FREQ:
 				    if cv2.waitKey(1) & 0xFF == ord('q'):
 				        finished = 1
 
