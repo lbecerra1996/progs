@@ -5,7 +5,7 @@ import datetime
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-from motion_detect import detect_motion
+from motion_detect import detect_motion as get_motion
 from fume_hood_ar_logic import vertical_main as fume_hood_height
 
 class FumeHood():
@@ -43,6 +43,7 @@ class FumeHood():
 		prevTime = datetime.datetime.now()
 		timeLastUsed = datetime.datetime.now()
 		finished = False
+		alarm_signal = 0
 
 		while not finished:
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
@@ -57,7 +58,7 @@ class FumeHood():
 
 			try:
 				motion_time = ALARM_MOTION_DURATION if alarm_signal else MOTION_DURATION
-				motion = detect_motion(cap, motion_time)
+				motion = get_motion(cap, motion_time)
 			except:
 				print "Error computing motion, defaults to 0"
 				motion = 0
