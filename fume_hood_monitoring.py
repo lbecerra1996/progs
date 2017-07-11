@@ -30,7 +30,7 @@ class FumeHood():
 		self.FILE_NAME = "fume_data_{}_{}-{}.csv".format(self.START_TIME.date(), self.START_TIME.hour, self.START_TIME.minute)
 
 		with open(self.FILE_NAME, "w") as f:
-			f.write("Fume Hood Data Log: " + self.DATE_STRING + "\n")
+			f.write("Fume Hood Data Log: " + str(self.START_TIME) + "\n")
 
 	def run(self, recording_length=-1):
 		# recording_length: time (in sec) to spend recording data.
@@ -52,13 +52,13 @@ class FumeHood():
 			prevTime = datetime.datetime.now()
 
 			try:
-				sashHeight = fume_hood_height(cap, HEIGHT_DURATION)
+				sashHeight = fume_hood_height(cap, FumeHood.HEIGHT_DURATION)
 			except:
 				print "Error computing sashHeight, defaults to 0"
 				sashHeight = 0
 
 			try:
-				motion_time = ALARM_MOTION_DURATION if alarm_signal else MOTION_DURATION
+				motion_time = FumeHood.ALARM_MOTION_DURATION if alarm_signal else FumeHood.MOTION_DURATION
 				motion = get_motion(cap, motion_time)
 			except:
 				print "Error computing motion, defaults to 0"
