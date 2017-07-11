@@ -25,8 +25,9 @@ class FumeHood():
 		self.MOTION_THRESHOLD = motion_threshold
 
 		# Create file with the date for storing fume hood data
-		self.DATE_STRING = str(datetime.datetime.now().date())
-		self.FILE_NAME = "fume_data_" + self.DATE_STRING + ".csv"
+		self.START_TIME = datetime.datetime.now()
+		# format: fume_data_yyyy-mm-dd_hh-mm.csv
+		self.FILE_NAME = "fume_data_{}_{}-{}.csv".format(self.START_TIME.date(), self.START_TIME.hour, self.START_TIME.minute)
 
 		with open(self.FILE_NAME, "w") as f:
 			f.write("Fume Hood Data Log: " + self.DATE_STRING + "\n")

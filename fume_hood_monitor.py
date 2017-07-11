@@ -5,7 +5,7 @@ import cv2.aruco as aruco
 import numpy as np
 import yaml
 import os
-from motion_detect import detect_motion
+from motion_detect import detect_motion as detect_motion
 from fume_hood_ar_logic import vertical_main as fume_hood_height
 
 
@@ -33,9 +33,11 @@ prevTime = datetime.datetime.now()
 # initialize variable to keep track of the last time the fume hood was in use
 timeLastUsed = datetime.datetime.now()
 
-date_string = str(datetime.datetime.now().date())
+date_string = str(timeLastUsed.date())
 
-file_name = "fume_data_" + date_string + ".csv"
+time_string = "{}-{}".format(str(timeLastUsed.hour), str(timeLastUsed.minute))
+
+file_name = "fume_data_{}_{}.csv".format(date_string, time_string)
 
 with open(file_name, "w") as f:
 	f.write("Fume Hood Data Log: " + date_string + "\n")
