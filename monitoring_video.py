@@ -74,9 +74,9 @@ class FumeHood():
 			cv2.putText(frame, "Alarm is %s" %alarm_signal, (10,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0))
 			cv2.imshow('frame',gray)
 
-    			i += 1
-                        if i == 2:
-                                finished = 1
+    		i += 1
+            if i == 2:
+                finished = 1
 
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
 
