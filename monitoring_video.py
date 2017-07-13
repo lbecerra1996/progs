@@ -58,19 +58,14 @@ class FumeHood():
 			if i == 2:
 				finished = 1
 				
-			
 			ret, frame = cap.read()
-
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			#res = cv2.aruco.detectMarkers(gray,dictionary) #output: corners, ids,rejected imgpts
  			#cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
-			cv2.putText(frame, alarm_signal, (100,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0))
-			
+			cv2.putText(frame, "Alarm is %s" %alarm_signal, (100,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0))
 			cv2.imshow('frame',gray)
 
     		
-
-
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
 
 			prevTime = datetime.datetime.now()
