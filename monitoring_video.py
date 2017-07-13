@@ -49,23 +49,35 @@ class FumeHood():
 		timeLastUsed = datetime.datetime.now()
 		finished = False
 		alarm_signal = 0
+		
+		#gpio stuff
 		gpio.setup(57, gpio.OUT)
 		gpio.set(57, 0)
+		
 		i = 0
+		
+		#aruco stuff
+		square_length = 6.35
+		markerLength = 5.08
+		dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
+		board = cv2.aruco.CharucoBoard_create(4,2,square_length,markerLength,dictionary)
+
+
 		while not finished:
 			
-			i += 1
-			if i == 2:
-				finished = 1
-				
+			#show video with alarm state
+		
 			ret, frame = cap.read()
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-			#res = cv2.aruco.detectMarkers(gray,dictionary) #output: corners, ids,rejected imgpts
- 			#cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
-			cv2.putText(frame, "Alarm is %s" %alarm_signal, (100,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0))
+			res = cv2.aruco.detectMarkers(gray,dictionary) #output: corners, ids,rejected imgpts
+ 			cv2.aruco.drawDetectedMarkers(gray,res[0],res[1])
+			cv2.putText(frame, "Alarm is %s" %alarm_signal, (10,100), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0))
 			cv2.imshow('frame',gray)
 
-    		
+    			i += 1
+                        if i == 2:
+                                finished = 1
+
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
 
 			prevTime = datetime.datetime.now()
