@@ -55,7 +55,7 @@ class FumeHood():
 		while not finished:
 			
 			i += 1
-			if i == 5:
+			if i == 2:
 				finished = 1
 				
 			ret, frame = cap.read()
