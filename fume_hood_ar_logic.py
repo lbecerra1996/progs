@@ -112,7 +112,7 @@ def measure_height(threeCorners, bot_to_top_distance):
 
     return (bot_to_top_distance) * (bot_to_mid/bot_to_top)
 
-def vertical_main(video_cap, duration=2, botToTopDistance=100, numOnSides=3, sideMargin=25):
+def vertical_main(video_cap, duration=2, side_margin=3, botToTopDistance=100, numOnSides=3):
     squareLength = 6.35    # cm
     markerLength = 5.08     # cm
     # minimum number of AR tags to consider a frame valid
@@ -120,7 +120,7 @@ def vertical_main(video_cap, duration=2, botToTopDistance=100, numOnSides=3, sid
     # distance between top left corner of bottom AR tag and bottom left corner of top AR tag
     BOT_TO_TOP_DISTANCE = botToTopDistance
     # arbitrary margin from side edge to qualify a point as being in the center region
-    SIDE_MARGIN = sideMargin
+    SIDE_MARGIN = side_margin
     AR_tag_dictionary = cv2.aruco.Dictionary_get(aruco.DICT_6X6_250) #AR tag dictionary
     board = cv2.aruco.CharucoBoard_create(4, 2, squareLength, markerLength, AR_tag_dictionary)
     arucoParams = aruco.DetectorParameters_create()
@@ -160,7 +160,7 @@ def vertical_main(video_cap, duration=2, botToTopDistance=100, numOnSides=3, sid
                 # difference between x values of top-left and top-right corners of one tag
                 # is a reasonable approximate for the AR tags' edge size
                 edgeSize = abs(sortedCorners[0][0][0] - sortedCorners[0][1][0])
-                SIDE_MARGIN = edgeSize * 1.5
+                SIDE_MARGIN = edgeSize * side_margin
                 marginsFixed = True
 
             # collect information on the leftmost tags, to determine degree of vertical openness

@@ -22,9 +22,10 @@ class FumeHood():
 	# minimum time of inactivity (in sec) required to trigger alarm when sash is left open
 	TIME_TO_ALARM = 30
 
-	def __init__(self, height_threshold=50, motion_threshold=0.05):
+	def __init__(self, height_threshold=50, motion_threshold=0.05, side_margin=3):
 		self.HEIGHT_THRESHOLD = height_threshold
 		self.MOTION_THRESHOLD = motion_threshold
+		self.SIDE_MARGIN = side_margin
 
 		# Create file with the date for storing fume hood data
 		self.START_TIME = datetime.datetime.now()
@@ -58,7 +59,7 @@ class FumeHood():
 			prevTime = datetime.datetime.now()
 
 			try:
-				sashHeight = fume_hood_height(cap, FumeHood.HEIGHT_DURATION)
+				sashHeight = fume_hood_height(cap, duration=FumeHood.HEIGHT_DURATION, side_margin=self.SIDE_MARGIN)
 			except:
 				print "Error computing sashHeight, defaults to 0"
 				sashHeight = 0
@@ -79,7 +80,7 @@ class FumeHood():
 
 			# signal to turn alarm on(1)/off(0)
 			# if the sash is open and hasn't been in use, turn on alarm
-			alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
+			alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > FumeHood.TIME_TO_ALARM) else 0
 			self.alarm(alarm_signal)
 
 			data.append((str(datetime.datetime.now()), timeStep, sashHeight, motion, "alarm: {}".format(alarm_signal)))
@@ -126,5 +127,9 @@ class FumeHood():
 
 if __name__ == "__main__":
 	# TO DO: give user the option to specify height_threshold, motion_threshold, recording_length from command line
-	fume_hood = FumeHood()
-	fume_hood.run()
+	height_threshold = 50
+	motion_threshold = 0.05
+	side_margin = 3
+	recording_length = -1
+	fume_hood = FumeHood(height_threshold, motion_threshold, side_margin)
+	fume_hood.run(recording_length)
