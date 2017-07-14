@@ -107,14 +107,14 @@ class FumeHood():
 		cap.release()
 		cv2.destroyAllWindows()
 
-	def blink(pin)
+	def blink(self, pin):
 		gpio.set(pin, 1)
 		time.sleep(2)
 		gpio.set(pin, 0)
 
 	def alarm(self, alarm_signal):
 		if alarm_signal:
-			blink(57)
+			self.blink(57)
 		else:
 			print "ALARM OFF"
 
