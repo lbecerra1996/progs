@@ -106,7 +106,7 @@ class FumeHood():
 		cap.release()
 		cv2.destroyAllWindows()
 
-	def blink(pin)
+	def blink(pin):
 		gpio.set(pin, 1)
 		time.sleep(2)
 		gpio.set(pin, 0)
