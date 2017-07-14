@@ -160,7 +160,7 @@ def vertical_main(video_cap, duration=2, side_margin=3, botToTopDistance=100, nu
                 # difference between x values of top-left and top-right corners of one tag
                 # is a reasonable approximate for the AR tags' edge size
                 edgeSize = abs(sortedCorners[0][0][0] - sortedCorners[0][1][0])
-                SIDE_MARGIN = edgeSize * SIDE_MARGIN
+                SIDE_MARGIN = edgeSize * side_margin
                 marginsFixed = True
 
             # collect information on the leftmost tags, to determine degree of vertical openness
