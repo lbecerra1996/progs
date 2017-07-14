@@ -113,7 +113,7 @@ class FumeHood():
 
 	def alarm(self, alarm_signal):
 		if alarm_signal:
-			blink(57)
+			self.blink(57)
 		else:
 			print "ALARM OFF"
 
