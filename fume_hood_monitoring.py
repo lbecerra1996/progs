@@ -7,6 +7,8 @@ import cv2.aruco as aruco
 import numpy as np
 from motion_detect import detect_motion as get_motion
 from fume_hood_ar_logic import vertical_main as fume_hood_height
+import gpio
+import time
 
 class FumeHood():
 	# amount of time (sec) to be spent detecting sash height for each measurement
@@ -45,6 +47,10 @@ class FumeHood():
 		timeLastUsed = datetime.datetime.now()
 		finished = False
 		alarm_signal = 0
+
+		#gpio stuff
+		gpio.setup(57, gpio.OUT)
+		gpio.set(57, 0)
 
 		while not finished:
 			timeStep = (datetime.datetime.now() - prevTime).total_seconds()
@@ -100,9 +106,14 @@ class FumeHood():
 		cap.release()
 		cv2.destroyAllWindows()
 
+	def blink(pin)
+		gpio.set(pin, 1)
+		time.sleep(2)
+		gpio.set(pin, 0)
+
 	def alarm(self, alarm_signal):
 		if alarm_signal:
-			print "ALARM ON"
+			blink(57)
 		else:
 			print "ALARM OFF"
 
