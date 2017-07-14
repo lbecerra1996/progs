@@ -79,7 +79,7 @@ class FumeHood():
 
 			# signal to turn alarm on(1)/off(0)
 			# if the sash is open and hasn't been in use, turn on alarm
-			alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > TIME_TO_ALARM) else 0
+			alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > FumeHood.TIME_TO_ALARM) else 0
 			self.alarm(alarm_signal)
 
 			data.append((str(datetime.datetime.now()), timeStep, sashHeight, motion, "alarm: {}".format(alarm_signal)))
