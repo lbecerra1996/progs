@@ -103,7 +103,7 @@ def edge_tags(cornersList, x_val, error_margin, isLeft):
 # given a list of the corners of three (leftmost or rightmost) tags, return y value difference between middle and bottom tags
 # TO DO: incorporate constants to account for distances from AR tags to borders
 def measure_height(threeCorners, bot_to_top_distance):
-	# sort the corners by increasing y value (i.e. decreasing height)
+    # sort the corners by increasing y value (i.e. decreasing height)
     topCorners, midCorners, botCorners = sorted(threeCorners, key=lambda corners: corners[0][1])
     # y-coordinate distance from top left corner of bottom AR tag to bottom left corner of top AR tag
     bot_to_top = botCorners[0][1] - topCorners[3][1]
@@ -183,13 +183,13 @@ def vertical_main(video_cap, duration=2, side_margin=3, botToTopDistance=100, nu
                 heightsRight.append(heightRight)
 
     try:
-    	leftAvg = float(sum(heightsLeft))/len(heightsLeft)
+        leftAvg = float(sum(heightsLeft))/len(heightsLeft)
     except:
-    	leftAvg = -1
+        leftAvg = -1
     try:
-    	rightAvg = float(sum(heightsRight))/len(heightsRight)
+        rightAvg = float(sum(heightsRight))/len(heightsRight)
     except:
-    	rightAvg = -1
+        rightAvg = -1
     print "Left height average: " + str(leftAvg)
     print "Right height average: " + str(rightAvg)
     # arbitrary choice: return the maximum measured height (in theory they should be approximately equal)
