@@ -11,18 +11,19 @@ import gpio
 import time
 
 class FumeHood():
-    # amount of time (sec) to be spent detecting sash height for each measurement
+    # amount of time (sec) to be spent detecting sash height
     HEIGHT_DURATION = 2
-    # amount of time (sec) to be spent detecting motion for each measurement (when alarm is OFF)
+    # amount of time (sec) to be spent detecting motion (when alarm is OFF)
     MOTION_DURATION = 15
-    # amount of time (sec) to be spent detecting motion for each measurement (when alarm is ON)
+    # amount of time (sec) to be spent detecting motion (when alarm is ON)
     ALARM_MOTION_DURATION = 2
     # make a measurement each LOG_FREQ seconds
     LOG_FREQ = 20
-    # minimum time of inactivity (in sec) required to trigger alarm when sash is left open
+    # min. time of inactivity (in sec) to trigger alarm when sash is left open
     TIME_TO_ALARM = 30
 
-    def __init__(self, height_threshold=50, motion_threshold=0.05, side_margin=3):
+    def __init__(self, height_threshold=50, motion_threshold=0.05, 
+                side_margin=3):
         self.HEIGHT_THRESHOLD = height_threshold
         self.MOTION_THRESHOLD = motion_threshold
         self.SIDE_MARGIN = side_margin
@@ -30,14 +31,20 @@ class FumeHood():
         # Create file with the date for storing fume hood data
         self.START_TIME = datetime.datetime.now()
         # format: fume_data_yyyy-mm-dd_hh-mm.csv
-        self.FILE_NAME = "fume_data_{}_{}-{}.csv".format(self.START_TIME.date(), self.START_TIME.hour, self.START_TIME.minute)
+        self.FILE_NAME = "fume_data_{}_{}-{}.csv".format(self.START_TIME.date(),
+                                                        self.START_TIME.hour, 
+                                                        self.START_TIME.minute)
 
         with open(self.FILE_NAME, "w") as f:
-            f.write("Fume Hood Data Log: " + str(self.START_TIME) + "\n")
+            headerString = "Fume Hood Data Log: " + str(self.START_TIME) + "\n"
+            headerString += "Date, Time Step, Left Height, Right Height, " + \
+                            "Max Height, Motion, Alarm\n"
+            f.write(headerString)
 
     def run(self, recording_length=-1):
         # recording_length: time (in sec) to spend recording data.
-        # -1: record for indefinite amount of time, until terminated by pressing 'q' or powering off the system
+        # -1: record for indefinite amount of time
+        timeIsFinite = recording_length > -1
 
         # initialize video capture
         cap = cv2.VideoCapture(0)
@@ -58,67 +65,83 @@ class FumeHood():
 
             prevTime = datetime.datetime.now()
 
+            # obtain sashHeight: (left height, right height, max height)
             try:
-                sashHeight = fume_hood_height(cap, duration=FumeHood.HEIGHT_DURATION, side_margin=self.SIDE_MARGIN)
+                sashHeight = fume_hood_height(cap, 
+                        duration=FumeHood.HEIGHT_DURATION,
+                        side_margin=self.SIDE_MARGIN)
             except:
-                print "Error computing sashHeight, defaults to 0"
-                sashHeight = 0
+                print "Error computing sashHeight, values default to 0"
+                sashHeight = (0, 0, 0)
 
             try:
-                motion_time = FumeHood.ALARM_MOTION_DURATION if alarm_signal else FumeHood.MOTION_DURATION
+                if alarm_signal:
+                    motion_time = FumeHood.ALARM_MOTION_DURATION
+                else:
+                    motion_time = FumeHood.MOTION_DURATION
                 motion = get_motion(cap, motion_time)
             except:
                 print "Error computing motion, defaults to 0"
                 motion = 0
 
-            # if there is motion (i.e. the fume hood is currently in use), update the value of timeLastUsed
+            # if there is motion, update the value of timeLastUsed
             if motion > self.MOTION_THRESHOLD:
                 timeLastUsed = datetime.datetime.now()
 
-            # compute the time elapsed (in seconds) since the fume hood was last used
-            timeSinceUse = (datetime.datetime.now() - timeLastUsed).total_seconds()
+            # time elapsed (in sec) since the fume hood was last used
+            timeInactive = datetime.datetime.now() - timeLastUsed
+            timeSinceUse = timeInactive.total_seconds()
 
             # signal to turn alarm on(1)/off(0)
             # if the sash is open and hasn't been in use, turn on alarm
-            alarm_signal = 1 if (sashHeight > self.HEIGHT_THRESHOLD) and (timeSinceUse > FumeHood.TIME_TO_ALARM) else 0
-            self.alarm(alarm_signal)
+            isOpen = sashHeight[2] > self.HEIGHT_THRESHOLD
+            isInactive = timeSinceUse > FumeHood.TIME_TO_ALARM
+            alarm_signal = 1 if isOpen and isInactive else 0
+            self._alarm(alarm_signal)
 
-            data.append((str(datetime.datetime.now()), timeStep, sashHeight, motion, "alarm: {}".format(alarm_signal)))
-            # optional: if we wanted to store data every X iterations, we would incorporate that feature here
+            data_entry = (str(datetime.datetime.now()), timeStep, \
+                        sashHeight[0], sashHeight[1], sashHeight[2], \
+                        motion, alarm_signal)
+            data.append(data_entry)
+            # optional: if we wanted to store data every X iterations, 
+            # we would incorporate that feature here
             if True:
-                self.write(data)
+                self._write(data)
                 data = []
 
             # wait until LOG_FREQ is over before making the next measurement
-            # listen for 'q' as a signal to quit
-            # NOTE: if alarm is on, bypass this wait time to avoid taking too long to turn off alarm
+            # NOTE: only if the alarm is off
             if not alarm_signal:
-                while (datetime.datetime.now() - prevTime).total_seconds() < self.LOG_FREQ:
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        finished = 1
+                # find the time remaining (sec) until LOG_FREQ
+                timeSoFar = datetime.datetime.now() - prevTime
+                timeRemaining = self.LOG_FREQ - timeSoFar.total_seconds()
+                # wait until timeRemaining has elapsed
+                time.sleep(timeRemaining)
 
-            # if we are recording for a limited amount of time and that time has elapsed, we are finished
-            if (recording_length > -1) and (datetime.datetime.now() - recording_start).total_seconds() > recording_length:
+            # if recording time is finite and that time has elapsed, stop
+            timeElapsed = datetime.datetime.now() - recording_start
+            timeOver = timeElapsed.total_seconds() > recording_length
+            if timeIsFinite and timeOver:
                 finished = 1
 
-        # turn off alarm
-        self.alarm(0)
+        # make sure alarm is off
+        self._alarm(0)
         # close video capture and cv2 windows
         cap.release()
         cv2.destroyAllWindows()
 
-    def blink(self, pin):
+    def _blink(self, pin):
         gpio.set(pin, 1)
         time.sleep(2)
         gpio.set(pin, 0)
 
-    def alarm(self, alarm_signal):
+    def _alarm(self, alarm_signal):
         if alarm_signal:
-            self.blink(57)
+            self._blink(57)
         else:
             print "ALARM OFF"
 
-    def write(self, data):
+    def _write(self, data):
         data_string = ""
         for data_entry in data:
             data_string += ",".join([str(e) for e in data_entry]) + '\n'
@@ -126,7 +149,9 @@ class FumeHood():
             f.write(data_string)
 
 if __name__ == "__main__":
-    # TO DO: give user the option to specify height_threshold, motion_threshold, recording_length from command line
+    # TO DO: give user the option to specify height_threshold, 
+    # motion_threshold, recording_length from command line
+    # possible option: argparser
     height_threshold = 50
     motion_threshold = 0.05
     side_margin = 3

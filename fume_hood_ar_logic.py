@@ -112,6 +112,8 @@ def measure_height(threeCorners, bot_to_top_distance):
 
     return (bot_to_top_distance) * (bot_to_mid/bot_to_top)
 
+# returns tuple: (left height, right height, max height)
+# values default to -1 if not measured properly
 def vertical_main(video_cap, duration=2, side_margin=3, botToTopDistance=100, numOnSides=3):
     squareLength = 6.35    # cm
     markerLength = 5.08     # cm
@@ -192,6 +194,6 @@ def vertical_main(video_cap, duration=2, side_margin=3, botToTopDistance=100, nu
         rightAvg = -1
     print "Left height average: " + str(leftAvg)
     print "Right height average: " + str(rightAvg)
-    # arbitrary choice: return the maximum measured height (in theory they should be approximately equal)
-    return max(leftAvg, rightAvg)
+    # return tuple: (left height, right height, max height)
+    return (leftAvg, rightAvg, max(leftAvg, rightAvg))
 
