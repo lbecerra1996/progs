@@ -21,8 +21,6 @@ class FumeHood():
     # LOG_FREQ = 20
     # min. time of inactivity (in sec) to trigger alarm when sash is left open
     TIME_TO_ALARM = 40
-    # index to keep track of when to write data to file
-    i_write = 0
 
     def __init__(self, height_threshold=50, motion_threshold=0.05, 
                 side_margin=3):
@@ -57,7 +55,9 @@ class FumeHood():
         timeLastUsed = datetime.datetime.now()
         finished = False
         alarm_signal = 0
-        recent_alarm = False
+        # recent_alarm = False
+        # index to keep track of when to write data to file
+        i_write = 0
 
         #gpio stuff
         gpio.setup(57, gpio.OUT)
