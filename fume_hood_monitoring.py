@@ -14,13 +14,15 @@ class FumeHood():
     # amount of time (sec) to be spent detecting sash height
     HEIGHT_DURATION = 2
     # amount of time (sec) to be spent detecting motion (when alarm is OFF)
-    MOTION_DURATION = 15
+    MOTION_DURATION = 3
     # amount of time (sec) to be spent detecting motion (when alarm is ON)
-    ALARM_MOTION_DURATION = 2
-    # make a measurement each LOG_FREQ seconds
-    LOG_FREQ = 20
+    # ALARM_MOTION_DURATION = 2
+    # make a measurement each LOG_FREQ seconds (when alarm is OFF)
+    # LOG_FREQ = 20
     # min. time of inactivity (in sec) to trigger alarm when sash is left open
-    TIME_TO_ALARM = 30
+    TIME_TO_ALARM = 40
+    # index to keep track of when to write data to file
+    i_write = 0
 
     def __init__(self, height_threshold=50, motion_threshold=0.05, 
                 side_margin=3):
@@ -55,6 +57,7 @@ class FumeHood():
         timeLastUsed = datetime.datetime.now()
         finished = False
         alarm_signal = 0
+        recent_alarm = False
 
         #gpio stuff
         gpio.setup(57, gpio.OUT)
@@ -75,11 +78,12 @@ class FumeHood():
                 sashHeight = (0, 0, 0)
 
             try:
-                if alarm_signal:
-                    motion_time = FumeHood.ALARM_MOTION_DURATION
-                else:
-                    motion_time = FumeHood.MOTION_DURATION
-                motion = get_motion(cap, motion_time)
+                # if alarm_signal:
+                #     motion_time = FumeHood.ALARM_MOTION_DURATION
+                # else:
+                #     motion_time = FumeHood.MOTION_DURATION
+                # motion = get_motion(cap, motion_time)
+                motion = get_motion(cap, FumeHood.MOTION_DURATION)
             except:
                 print "Error computing motion, defaults to 0"
                 motion = 0
@@ -105,24 +109,34 @@ class FumeHood():
             data.append(data_entry)
             # optional: if we wanted to store data every X iterations, 
             # we would incorporate that feature here
-            if True:
+            i_write += 1
+            if (i_write % 5) == 0:
                 self._write(data)
                 data = []
 
             # wait until LOG_FREQ is over before making the next measurement
             # NOTE: only if the alarm is off
-            if not alarm_signal:
-                # find the time remaining (sec) until LOG_FREQ
-                timeSoFar = datetime.datetime.now() - prevTime
-                timeRemaining = self.LOG_FREQ - timeSoFar.total_seconds()
-                # wait until timeRemaining has elapsed
-                time.sleep(timeRemaining)
+            # NOTE: not right after an alarm has been off
+            # if not alarm_signal:
+            #     # find the time remaining (sec) until LOG_FREQ
+            #     timeSoFar = datetime.datetime.now() - prevTime
+            #     timeRemaining = self.LOG_FREQ - timeSoFar.total_seconds()
+            #     # wait until timeRemaining has elapsed
+            #     # exception: when there has been a recent alarm (was causing a bug)
+            #     if not recent_alarm:
+            #         time.sleep(timeRemaining)
+            #     else:
+            #         # by the next iteration, the last alarm will not have been recent
+            #         recent_alarm = False
+            # else:
+            #     # if alarm_signal is 1, there is a recent alarm
+            #     recent_alarm = True
 
             # if recording time is finite and that time has elapsed, stop
             timeElapsed = datetime.datetime.now() - recording_start
             timeOver = timeElapsed.total_seconds() > recording_length
             if timeIsFinite and timeOver:
-                finished = 1
+                finished = True
 
         # make sure alarm is off
         self._alarm(0)
@@ -131,13 +145,16 @@ class FumeHood():
         cv2.destroyAllWindows()
 
     def _blink(self, pin):
+        # beep for 2 seconds
         gpio.set(pin, 1)
         time.sleep(2)
         gpio.set(pin, 0)
 
     def _alarm(self, alarm_signal):
         if alarm_signal:
+            # pin 57 controls the alarm hardware
             self._blink(57)
+            print "ALARM ON"
         else:
             print "ALARM OFF"
 
@@ -145,6 +162,7 @@ class FumeHood():
         data_string = ""
         for data_entry in data:
             data_string += ",".join([str(e) for e in data_entry]) + '\n'
+        # append new data to the end of the file
         with open(self.FILE_NAME, "a") as f:
             f.write(data_string)
 
@@ -152,9 +170,13 @@ if __name__ == "__main__":
     # TO DO: give user the option to specify height_threshold, 
     # motion_threshold, recording_length from command line
     # possible option: argparser
+
+    # calibrate this value to match each specific configuration
     height_threshold = 50
-    motion_threshold = 0.05
+    motion_threshold = 0.005
+    # width of each column, measured in AR tag side lengths
     side_margin = 3
+    # time the program will run for (sec); -1 --> run indefinitely
     recording_length = -1
     fume_hood = FumeHood(height_threshold, motion_threshold, side_margin)
     fume_hood.run(recording_length)
