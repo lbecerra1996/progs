@@ -140,6 +140,8 @@ class FumeHood():
 
         # make sure alarm is off
         self._alarm(0)
+        # make sure any remaining data is written to the file
+        self._write(data)
         # close video capture and cv2 windows
         cap.release()
         cv2.destroyAllWindows()
